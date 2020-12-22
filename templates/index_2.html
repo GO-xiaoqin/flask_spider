@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>首页</title>
+<meta charset="utf-8">
+
+<script>
+        function btnAction(data) {
+            var state = data.parentNode.getElementsByTagName("span")[2];
+            var city = data.parentNode.getElementsByTagName("span")[0].className;
+            var house_type = data.parentNode.getElementsByTagName("span")[1].className;
+            const finalUrl = `http://127.0.0.1:5000/result?city=${city}&house_type=${house_type}`;
+            if (state.className == "3"){
+                window.location.href = finalUrl;
+            }
+            else {
+                alert(state.textContent);
+            }
+        }
+
+        function DeleteBtn(data) {
+            var state = data.parentNode.getElementsByTagName("span")[2];
+            var city = data.parentNode.getElementsByTagName("span")[0].className;
+            var house_type = data.parentNode.getElementsByTagName("span")[1].className;
+            const finalUrl = `http://127.0.0.1:5000/delete?city=${city}&house_type=${house_type}`;
+            if (state.className == "3"){
+                window.location.href = finalUrl;
+            }
+            else {
+                alert(state.textContent);
+            }
+        }
+</script>
+
+<body>
+<form id="my-form" method="post" action="/test">
+
+    <select name="city" multiple="multiple" size="4">
+        {% if cities %}
+            {% for i in cities %}
+                <option value="{{ i }}">{{ cities[i] }}</option>
+            {% endfor %}
+        {% endif %}
+    </select>
+
+    <select name="house_type" multiple="multiple" size="4">
+        {% if house_type %}
+            {% for i in house_type %}
+                <option value="{{ i }}">{{ house_type[i] }}</option>
+            {% endfor %}
+        {% endif %}
+    </select>
+
+    <!-- use this for server-side processing -->
+    <input type="submit"/>
+</form>
+
+<div>
+<ul>
+    {% for i in crawl_tasks %}
+    <li>
+        <button type="submit" onclick="btnAction(this)">查看</button>
+        <span class="{{ i[0] }}">{{ cities[i[0]] }}</span>
+        <span class="{{ i[1] }}">{{ house_type[i[1]] }}</span>
+        <span class="{{ i[2] }}">{{ crawl_status[i[2]] }}</span>
+        <button type="submit" onclick="DeleteBtn(this)">删除</button>
+    </li>
+    {% endfor %}
+</ul>
+</div>
+</body>
+</html>

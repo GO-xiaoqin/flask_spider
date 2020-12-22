@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>详情</title>
+</head>
+<body>
+
+<div>
+<table border="1">
+        {% if header and contents %}
+
+            <tr>
+            {% for i in header %}
+                <th>{{ i }}</th>
+            {% endfor %}
+            </tr>
+            {% for i in contents %}
+            <tr>
+                {% for j in i %}
+                <td>{{ j }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        {% endif %}
+</table>
+<a>下载全部</a>
+</div>
+</body>
+</html>
