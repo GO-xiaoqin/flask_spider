@@ -29,7 +29,7 @@ class Config(object):  # 创建配置，用类
             'seconds': 30,
         },
     ]
-    REDIS_URL = "redis://:密码@127.0.0.1/0"
+    REDIS_URL = "redis://127.0.0.1/0"
 
 
 app = Flask(__name__)
