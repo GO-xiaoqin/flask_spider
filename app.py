@@ -1,9 +1,9 @@
 import csv
+import json
 import os
 import queue
-import pandas as pd
 
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, send_file
 from flask_apscheduler import APScheduler
 from flask_redis import FlaskRedis
 
@@ -15,22 +15,32 @@ from src.lib.spider.loupan_spider import LouPanBaseSpider
 from src.lib.utility.date import get_date_string
 from src.lib.utility.path import DATA_PATH
 from src.xiaoqu_to_csv import xiaoqu_to_csv
+from logging.config import dictConfig
+
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format':  "[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s][%(thread)d] - %(message)s",
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
+
 
 queues = queue.Queue()
 
 
 class Config(object):  # 创建配置，用类
-    # 任务列表
     JOBS = [
-        # {  # 第一个任务
-        #     'id': 'job1',
-        #     'func': '__main__:job_1',
-        #     'args': (1, 2),
-        #     'trigger': 'cron', # cron表示定时任务
-        #     'hour': 19,
-        #     'minute': 27
-        # },
-        {  # 第二个任务，每隔5S执行一次
+        {  # 每隔5S执行一次
             'id': 'job1',
             'func': '__main__:run_spider',  # 方法名
             'args': (queues,),  # 入参
@@ -98,7 +108,7 @@ def index():
         "crawl_status": crawl_status,
         "crawl_tasks": crawl_tasks,
     }
-    return render_template('index_2.html', **content)
+    return render_template('index.html', **content)
 
 
 @app.route('/delete')
@@ -111,9 +121,8 @@ def delete():
 @app.route('/result')
 def result():
     request_param = request.values.to_dict()
-    date = get_date_string()
-    csv_dir = "{0}/{1}/{2}/{3}/{4}".format(DATA_PATH, SPIDER_NAME, request_param['house_type'], request_param['city'], date)
-    csv_path = csv_dir + "{}_{}.csv".format(request_param['house_type'], request_param['city'])
+    csv_path = get_csv_dir((request_param['city'], request_param['house_type']))
+    app.logger.info(csv_path)
     if os.path.exists(csv_path):
         try:
             contents = list()
@@ -127,17 +136,27 @@ def result():
             content = {
                 "contents": cont[:50],
                 "header": header,
+                "request_param": request_param,
             }
         except Exception as e:
             app.logger.error(e)
             content = dict()
     else:
         content = dict()
-    return render_template('index.html', **content)
+    return render_template('result.html', **content)
 
 
-@app.route('/test', methods=['POST'])
-def hello_world():
+@app.route('/download')
+def download_file():
+    request_param = request.values.to_dict()
+    csv_path = get_csv_dir((request_param['city'], request_param['house_type']))
+    file_name = get_date_string() + "{}_{}.csv".format(request_param['house_type'], request_param['city'])
+
+    return send_file(csv_path, mimetype='text/csv', attachment_filename=file_name, as_attachment=True)
+
+
+@app.route('/grab', methods=['POST'])
+def grab():
     request_param = request.values.to_dict()
     if all(i in request_param for i in ('city', 'house_type')) and all((request_param['city'], request_param['house_type'])):
         app.logger.info("获取到 city {}, house_type {}".format(request_param['city'], request_param['house_type']))
@@ -145,8 +164,8 @@ def hello_world():
         queues.put((request_param['city'], request_param['house_type']))
         app.logger.info("已推到队列！！！")
     else:
-        return "parameter error!!!"
-    return "Ready to grab!!!"
+        return json.dumps({'status': "0", "result": "parameter error!!!"})
+    return json.dumps({'status': "1", "result": "Ready to grab!!!"})
 
 
 def run_spider(queues):
@@ -154,13 +173,11 @@ def run_spider(queues):
     while True:
         try:
             data = queues.get(timeout=10)
-        except:
+        except Exception:
             app.logger.info('队列是空的')
             break
         redis_client.hset('crawl_task', data[0] + '_' + data[1], 2)
-        date = get_date_string()
-        csv_dir = "{0}/{1}/{2}/{3}/{4}".format(DATA_PATH, SPIDER_NAME, data[1], data[0], date)
-        csv_path = csv_dir + "{}_{}.csv".format(data[1], data[0])
+        csv_path = get_csv_dir(data)
         if not os.path.exists(csv_path):
             try:
                 if data[1] == 'xiaoqu':
@@ -184,8 +201,16 @@ def run_spider(queues):
             app.logger.info("已经抓过。")
 
 
+def get_csv_dir(data):
+    date = get_date_string()
+    csv_dir = "{0}/{1}/{2}/{3}/{4}".format(DATA_PATH, SPIDER_NAME, data[1], data[0], date)
+    csv_path = csv_dir + "{}_{}.csv".format(data[1], data[0])
+
+    return csv_path
+
+
 if __name__ == '__main__':
     scheduler = APScheduler()
     scheduler.init_app(app)
     scheduler.start()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8883, debug=True)

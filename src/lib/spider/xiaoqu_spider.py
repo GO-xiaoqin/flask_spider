@@ -3,25 +3,30 @@
 # author: zengyuetian
 # 此代码仅供学习与交流，请勿用于商业用途。
 # 爬取小区数据的爬虫派生类
+import os
+import sys
+
+sys.path.append(os.getcwd()) 
 
 import re
+
+import src.lib.utility.version
 import threadpool
 from bs4 import BeautifulSoup
 from src.lib.item.xiaoqu import *
-from src.lib.zone.city import get_city
 from src.lib.spider.base_spider import *
 from src.lib.utility.date import *
+from src.lib.utility.log import *
 from src.lib.utility.path import *
 from src.lib.zone.area import *
-from src.lib.utility.log import *
-import src.lib.utility.version
+from src.lib.zone.city import get_city
 
 
 class XiaoQuBaseSpider(BaseSpider):
     def collect_area_xiaoqu_data(self, city_name, area_name, fmt="csv"):
         """
         对于每个板块,获得这个板块下所有小区的信息
-        并且将这些信息写入文件保存
+        并件且将这些信息写入文保存
         :param city_name: 城市
         :param area_name: 板块
         :param fmt: 保存文件格式
@@ -142,5 +147,5 @@ if __name__ == "__main__":
     # urls = get_xiaoqu_area_urls()
     # print urls
     # get_xiaoqu_info("sh", "beicai")
-    spider = XiaoQuBaseSpider("lianjia")
-    spider.start()
+    spider = XiaoQuBaseSpider()
+    spider.start("bj")

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>详情</title>
+</head>
+<body>
+<div><a onclick="window.location.href = '/'" style="cursor: pointer;font-size: 40px;">&nbsp&nbsp首页</a></div>
+
+<div>
+<table border="1">
+        {% if header and contents %}
+
+            <tr>
+            {% for i in header %}
+                <th>{{ i }}</th>
+            {% endfor %}
+            </tr>
+            {% for i in contents %}
+            <tr>
+                {% for j in i %}
+                <td>{{ j }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        {% endif %}
+</table>
+<div>
+	{% if request_param %}
+	<a href="/download?house_type={{ request_param['house_type'] }}&city={{ request_param['city'] }}" style="cursor: pointer;font-size: 40px;">下载全部</a>
+	{% endif %}
+</div>
+</div>
+</body>
+</html>

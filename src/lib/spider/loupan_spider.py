@@ -115,4 +115,5 @@ class LouPanBaseSpider(BaseSpider):
 
 
 if __name__ == '__main__':
-    pass
+    spider = LouPanBaseSpider()
+    spider.start('bj')
