@@ -127,6 +127,7 @@ class XiaoQuBaseSpider(BaseSpider):
         nones = [None for i in range(len(areas))]
         city_list = [city for i in range(len(areas))]
         args = zip(zip(city_list, areas), nones)
+        print(args)
         # areas = areas[0: 1]
 
         # 针对每个板块写一个文件,启动一个线程来操作

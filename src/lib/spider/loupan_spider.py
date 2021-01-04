@@ -116,4 +116,4 @@ class LouPanBaseSpider(BaseSpider):
 
 if __name__ == '__main__':
     spider = LouPanBaseSpider()
-    spider.start('bj')
+    # spider.get_loupan_info('bj')

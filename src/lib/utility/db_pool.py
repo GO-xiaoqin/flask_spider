@@ -22,8 +22,8 @@ POOL = PooledDB(
     # 7 = always
     host='127.0.0.1',
     port=3306,
-    user='root',
-    password='xu551212',
+    user='liu',
+    password='9090',
     database='test',
     charset='utf8'
 )
