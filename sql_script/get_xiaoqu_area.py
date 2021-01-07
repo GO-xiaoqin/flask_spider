@@ -10,7 +10,7 @@ from src.lib.spider.base_spider import thread_pool_size
 
 db = pymysql.connect("localhost", "liu", "9090", "test")
 
-url = "http://{}.fang.ke.com/loupan/"
+url = "http://{}.ke.com/xiaoqu/"
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                   "Chrome/87.0.4280.88 Safari/537.36",
@@ -27,23 +27,23 @@ def main(city, city_id):
     else:
         if response.status_code == 200:
             html = etree.HTML(response.text)
-            citys_data = html.xpath('//*[@class="district-wrapper"]//*[@class="district-item"] | //*[@class="items district"]//li')
+            citys_data = html.xpath('//*[@class="position"]//a[contains(@class,"CLICKDATA")]')
             for i in citys_data:
-                # print(i.xpath('./text()')[0])
                 cursor = db2.cursor()
-                cursor.execute("SELECT * FROM area_city_ke WHERE area=%s", [i.xpath('./text()')[0]])
+                cursor.execute("SELECT * FROM ershou_area_ke WHERE area=%s", [i.xpath('./text()')[0]])
                 if cursor.fetchone():
                     cursor.close()
                     continue
                 try:
-                    sql = "INSERT INTO area_city_ke(area, area_code, city_id) VALUES (%s,%s,%s)"
+                    area_code = [j for i in i.xpath('./@href') for j in str(i).split('/') if j and j != 'xiaoqu'][0]
+                    sql = "INSERT INTO ershou_area_ke(area, area_code, city_id) VALUES (%s,%s,%s)"
                     # 执行sql语句
-                    cursor.execute(sql, (i.xpath('./text()')[0], i.xpath('./@data-district-spell')[0], int(city_id)))
+                    cursor.execute(sql, (i.xpath('./text()')[0], area_code, int(city_id)))
                     # 提交到数据库执行
                     db2.commit()
                 except Exception as e:
                     print("有错误!!! {}".format(repr(e)))
-                    print(i.xpath('./text()')[0], i.xpath('./@data-district-spell')[0], int(city_id))
+                    print(i.xpath('./text()'), i.xpath('./@href'), int(city_id))
                     # 如果发生错误则回滚
                     db2.rollback()
                 else:
@@ -57,7 +57,7 @@ def main(city, city_id):
 if __name__ == "__main__":
     # 获取城市
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM provice_city_ke")
+    cursor.execute("SELECT * FROM provice_city_ke where city_status=1")
     city_data = cursor.fetchall()
     # 关闭游标和数据库的连接
     cursor.close()
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     pool_size = thread_pool_size
     pool = threadpool.ThreadPool(pool_size)
     my_requests = threadpool.makeRequests(main, arges)
-    [pool.putRequest(req) for req in my_requests]
+    [pool.putRequest(req) for req in my_requests]   # debug 调试 my_requests[:1]
     pool.wait()
     pool.dismissWorkers(pool_size, do_join=True)  # 完成后退出
 

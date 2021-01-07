@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-# author: zengyuetian
 # 此代码仅供学习与交流，请勿用于商业用途。
 # 爬取楼盘数据的爬虫派生类
 import pprint
@@ -28,10 +27,7 @@ class LouPanBaseSpider(BaseSpider):
         self.area = area
 
     def collect_city_loupan_data(self):
-        """
-        将指定城市的新房楼盘数据存储下来，默认存为csv文件
-        :return: None
-        """
+
         t1 = time.time()  # 开始计时
         get_url = "http://{0}.fang.{1}.com/loupan/".format(self.city, self.name)
         get_url = "http://{0}.fang.{1}.com/loupan/{2}/".format(self.city, self.name, self.area) if self.area else get_url
@@ -91,14 +87,13 @@ class LouPanBaseSpider(BaseSpider):
         }
         houses_status = {'在售': 1, '下期待开': 2, '未开盘': 3}
 
-        loupan_list = list()
         headers = create_headers()
         try:
             BaseSpider.random_delay()
             response = requests.get(get_url, timeout=10, headers=headers)
         except Exception as e:
             logger.error("Have a Error {}".format(repr(e)))
-            return loupan_list
+            return
         html = response.content
         soup = BeautifulSoup(html, "lxml")
 
@@ -149,7 +144,7 @@ class LouPanBaseSpider(BaseSpider):
         coon = POOL.connection()
         cur = coon.cursor()
         sql = """select * from houses_city where houses=%s and area_code=%s and city_code=%s"""
-        cur.execute(sql, [data[0], ('', self.area)[bool(self.area)], self.city])
+        cur.execute(sql, [('', data[0])[bool(data[0])], ('', self.area)[bool(self.area)], self.city])
         result = cur.fetchone()
         if result:
             houses_id = result[0]
@@ -157,7 +152,7 @@ class LouPanBaseSpider(BaseSpider):
             try:
                 cur.execute(
                     """insert into houses_city(houses, area_code, city_code) VALUES (%s, %s, %s)""",
-                    [data[0], ('', self.area)[bool(self.area)], self.city]
+                    [('', data[0])[bool(data[0])], ('', self.area)[bool(self.area)], self.city]
                 )
                 coon.commit()
             except Exception as e:
@@ -168,7 +163,7 @@ class LouPanBaseSpider(BaseSpider):
                 coon.close()
                 return
             else:
-                cur.execute(sql, [data[0], ('', self.area)[bool(self.area)], self.city])
+                cur.execute(sql, [('', data[0])[bool(data[0])], ('', self.area)[bool(self.area)], self.city])
                 result = cur.fetchone()
                 houses_id = result[0]
 
@@ -202,12 +197,16 @@ class LouPanBaseSpider(BaseSpider):
         :return:
         """
         logger.info("准备抓取 {} {}".format(self.city, self.area))
-        result = self.collect_city_loupan_data()    # 返回运行时间
+
+        try:
+            result = self.collect_city_loupan_data()    # 返回运行时间
+        except Exception as e:
+            logger.error(repr(e))
+            result = 0
+
         logger.info("Total cost {0} second".format(result))
 
-        # TODO
-        # logger.info('Today date is: %s' % self.date_string)
-        # self.today_path = create_date_path("{0}/loupan".format(SPIDER_NAME), city, self.date_string)
+        return result
 
 
 if __name__ == '__main__':

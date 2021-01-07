@@ -1,4 +1,4 @@
-CREATE TABLE houses_info(
+CREATE TABLE houses_info_ke(
     `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
     `houses_title` VARCHAR(50) DEFAULT NULL comment '楼盘名字',
     `houses_type` INT(8) DEFAULT NULL comment '楼盘类型: 1住宅，2别墅，3商业，4写字楼，5底商',
@@ -12,7 +12,7 @@ CREATE TABLE houses_info(
     `houses_id` INT(11) UNSIGNED NOT NULL,
     PRIMARY KEY (`id`),
     unique index(`houses_id`, `houses_price`),
-    FOREIGN KEY(`houses_id`) REFERENCES houses_city(id)
+    FOREIGN KEY(`houses_id`) REFERENCES houses_city_ke(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=INNODB DEFAULT CHARSET=utf8;
