@@ -3,6 +3,7 @@
 
 import pymysql
 from dbutils.pooled_db import PooledDB
+from src.lib.utility.log import logger
 
 POOL = PooledDB(
     creator=pymysql,  # 使用链接数据库的模块
@@ -28,3 +29,58 @@ POOL = PooledDB(
     charset='utf8'
 )
 
+
+def get_area_city():
+    """
+    获取数据库中楼盘在每个城市的区域
+    :return:
+    """
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql_fang = """
+        select a.area,a.area_code, b.city, b.city_code, b.provice from area_city_ke a 
+        join provice_city_ke b on a.city_id=b.id
+    """
+    sql_ershou = """
+        select a.area,a.area_code, b.city, b.city_code, b.provice from ershou_area_ke a 
+        join provice_city_ke b on a.city_id=b.id
+    """
+    try:
+        cur.execute(sql_fang)
+        result_fang = cur.fetchall()
+        cur.execute(sql_ershou)
+        result_ershou = cur.fetchall()
+
+        result = {
+            'result_fang': result_fang,
+            'result_ershou': result_ershou,
+        }
+
+        for r in result:
+            result_city = {i[3]: i[2] for i in result[r]}
+            result_city = [{'city_name': result_city[i], 'city_code': i, 'area': []} for i in result_city]
+            result_ = [{'name': i, 'city': []} for i in set([i[4] for i in result[r]])]
+
+            for i in result[r]:
+                for j in range(len(result_city)):
+                    if i[3] in result_city[j]['city_code']:
+                        result_city[j]['area'].append({'area_name': i[0], 'area_code': i[1]})
+                        result_city[j]['provice'] = i[4]
+            for i in result_city:
+                for j in range(len(result_)):
+                    if i['provice'] == result_[j]['name']:
+                        result_[j]['city'].append(i)
+            result[r] = result_
+
+    except Exception as e:
+        logger.error(repr(e))
+        result = dict()
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
+if __name__ == '__main__':
+    print(get_area_city())

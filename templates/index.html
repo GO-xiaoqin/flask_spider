@@ -2,7 +2,8 @@
 <html lang="en">
 <title>首页</title>
 <meta charset="utf-8">
-<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.11.2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/test.js') }}"></script>
 <script type="text/javascript">
         function btnAction(data) {
             var state = data.parentNode.getElementsByTagName("span")[2];
@@ -49,11 +50,23 @@
                 error : function() {
                     alert("异常！");
                 }
-            });
+            })
         }
 </script>
 
 <body>
+
+<div class="test">
+
+    <select id="cmbProvince" name="cmbProvince"></select>
+    <select id="cmbCity" name="cmbCity"></select>
+    <select id="cmbArea" name="cmbArea"></select>
+
+   <script type="text/javascript">
+        addressInit('cmbProvince', 'cmbCity', 'cmbArea');
+   </script>
+</div>
+
 
 <div id="form-div">
 <form id="my-form" method="post" action="##" onsubmit="return false">

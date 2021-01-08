@@ -2,7 +2,8 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/sql_script/area_city_ke.sql" dialect="MySQL" />
-    <file url="file://$PROJECT_DIR$/sql_script/ershou_xiaoqu_area_city_ke.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql_script/ershou_area_city_ke.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/sql_script/ershou_info_ke.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/sql_script/houses_city_ke.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/sql_script/houses_info_ke.sql" dialect="MySQL" />
     <file url="file://$PROJECT_DIR$/sql_script/provice_city_ke.sql" dialect="MySQL" />

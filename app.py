@@ -13,6 +13,7 @@ from src.lib.spider.ershou_spider import ErShouSpider
 from src.lib.spider.zufang_spider import ZuFangBaseSpider
 from src.lib.spider.loupan_spider import LouPanBaseSpider
 from src.lib.utility.date import get_date_string
+from src.lib.utility.db_pool import get_area_city
 from src.lib.utility.path import DATA_PATH
 from src.xiaoqu_to_csv import xiaoqu_to_csv
 from logging.config import dictConfig
@@ -166,6 +167,21 @@ def grab():
     else:
         return json.dumps({'status': "0", "result": "parameter error!!!"})
     return json.dumps({'status': "1", "result": "Ready to grab!!!"})
+
+
+@app.route('/get_city', methods=['GET'])
+def get_city():
+    result = get_area_city()
+    if result:
+        # result_ershou = dict()
+        # for i in result['result_ershou']:
+        #     # result_ershou[i[4]] = {}
+        app.logger.info(result['result_ershou'])
+        # TODO 添加前端功能
+
+
+        return json.dumps({'status': 1, "result": result})
+    return json.dumps({'status': 0, "result": None})
 
 
 def run_spider(queues):
