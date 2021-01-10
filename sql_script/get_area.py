@@ -8,7 +8,7 @@ import pymysql
 
 from src.lib.spider.base_spider import thread_pool_size
 
-db = pymysql.connect("localhost", "liu", "9090", "test")
+db = pymysql.connect("localhost", "root", "xu551212", "test")
 
 url = "http://{}.fang.ke.com/loupan/"
 headers = {
@@ -19,7 +19,7 @@ headers = {
 
 
 def main(city, city_id):
-    db2 = pymysql.connect("localhost", "liu", "9090", "test")
+    db2 = pymysql.connect("localhost", "root", "xu551212", "test")
     try:
         response = requests.get(url.format(city), headers=headers, timeout=10)
     except Exception as e:

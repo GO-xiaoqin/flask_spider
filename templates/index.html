@@ -3,72 +3,26 @@
 <title>首页</title>
 <meta charset="utf-8">
 <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.11.2.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/test.js') }}"></script>
-<script type="text/javascript">
-        function btnAction(data) {
-            var state = data.parentNode.getElementsByTagName("span")[2];
-            var city = data.parentNode.getElementsByTagName("span")[0].className;
-            var house_type = data.parentNode.getElementsByTagName("span")[1].className;
-            const finalUrl = `/result?city=${city}&house_type=${house_type}`;
-            if (state.className == "3"){
-                window.location.href = finalUrl;
-            }
-            else {
-                alert(`${state.textContent} 抓取完成即可查看!`);
-            }
-        }
-
-        function DeleteBtn(data) {
-            var state = data.parentNode.getElementsByTagName("span")[2];
-            var city = data.parentNode.getElementsByTagName("span")[0].className;
-            var house_type = data.parentNode.getElementsByTagName("span")[1].className;
-            const finalUrl = `/delete?city=${city}&house_type=${house_type}`;
-            if (state.className == "3"){
-                window.location.href = finalUrl;
-            }
-            else {
-                alert(`${state.textContent} 抓取完成即可删除!`);
-            }
-        }
-
-        function login() {
-            $.ajax({
-            //几个参数需要注意一下
-                type: "POST",//方法类型
-                dataType: "json",//预期服务器返回的数据类型
-                url: "/grab" ,//url
-                data: $('#my-form').serialize(),
-                success: function (result) {
-                    {#console.log(result);//打印服务端返回的数据(调试用)#}
-                    if (result['status'] == "1") {
-                        window.location.href = "/"
-                    }
-                    if (result['status'] == "0"){
-                        alert(result['result']);
-                    }
-                },
-                error : function() {
-                    alert("异常！");
-                }
-            })
-        }
-</script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/jsAddress.js') }}"></script>
 
 <body>
 
-<div class="test">
-
+<div id="form-div">
+<form id="my-form" method="post" action="##" onsubmit="return false"></form>
+    <select id="cmbType" name="cmbType"></select>
     <select id="cmbProvince" name="cmbProvince"></select>
     <select id="cmbCity" name="cmbCity"></select>
     <select id="cmbArea" name="cmbArea"></select>
 
-   <script type="text/javascript">
-        addressInit('cmbProvince', 'cmbCity', 'cmbArea');
-   </script>
+    <script type="text/javascript">
+        addressInit('cmbType', 'cmbProvince', 'cmbCity', 'cmbArea');
+    </script>
+    <input type="submit" value="抓取" onclick="login()">
+</form>
 </div>
 
 
-<div id="form-div">
+<!-- <div id="form-div">
 <form id="my-form" method="post" action="##" onsubmit="return false">
 
     <select name="city" multiple="multiple" size="4">
@@ -89,7 +43,7 @@
 
     <input type="submit" value="抓取" onclick="login()">&nbsp<input type="reset" value="重置">
 </form>
-</div>
+</div> -->
 
 <div>
 <ul>

@@ -49,7 +49,7 @@ class Config(object):  # 创建配置，用类
             'seconds': 30,
         },
     ]
-    REDIS_URL = "redis://:Xu551212@119.8.116.167/0"
+    REDIS_URL = "redis://:Xu551212@127.0.0.1/0"
 
 
 app = Flask(__name__)
@@ -59,35 +59,7 @@ redis_client = FlaskRedis(app, decode_responses=True)
 
 @app.route('/')
 def index():
-    cities = {
-        'bj': '北京',
-        'cd': '成都',
-        'cq': '重庆',
-        'cs': '长沙',
-        'dg': '东莞',
-        'dl': '大连',
-        'fs': '佛山',
-        'gz': '广州',
-        'hz': '杭州',
-        'hf': '合肥',
-        'jn': '济南',
-        'nj': '南京',
-        'qd': '青岛',
-        'sh': '上海',
-        'sz': '深圳',
-        'su': '苏州',
-        'sy': '沈阳',
-        'tj': '天津',
-        'wh': '武汉',
-        'xm': '厦门',
-        'yt': '烟台',
-    }
-    house_type = {
-        "xiaoqu": "小区房价",
-        "ershou": "挂牌二手房",
-        "zufang": "出租房",
-        "loupan": "新房",
-    }
+    # TODO 进行前端参数传递
     crawl_status = {
         '1': '待抓取',
         '2': '抓取中',
@@ -104,8 +76,6 @@ def index():
             str(crawl_task[task]),
         ))
     content = {
-        "cities": cities,
-        "house_type": house_type,
         "crawl_status": crawl_status,
         "crawl_tasks": crawl_tasks,
     }
@@ -173,13 +143,6 @@ def grab():
 def get_city():
     result = get_area_city()
     if result:
-        # result_ershou = dict()
-        # for i in result['result_ershou']:
-        #     # result_ershou[i[4]] = {}
-        app.logger.info(result['result_ershou'])
-        # TODO 添加前端功能
-
-
         return json.dumps({'status': 1, "result": result})
     return json.dumps({'status': 0, "result": None})
 
