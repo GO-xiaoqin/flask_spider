@@ -1,28 +1,24 @@
 import csv
 import json
-import os
 import queue
 
 from flask import Flask, request, render_template, redirect, url_for, send_file
 from flask_apscheduler import APScheduler
 from flask_redis import FlaskRedis
 
-from src.lib.spider.base_spider import SPIDER_NAME
-from src.lib.spider.xiaoqu_spider import XiaoQuBaseSpider
-from src.lib.spider.ershou_spider import ErShouSpider
-from src.lib.spider.zufang_spider import ZuFangBaseSpider
-from src.lib.spider.loupan_spider import LouPanBaseSpider
+from src.lib.spider.xiaoqu_spider_db import XiaoQuBaseSpider
+from src.lib.spider.ershou_spider_db import ErShouSpider
+from src.lib.spider.loupan_spider_db import LouPanBaseSpider
 from src.lib.utility.date import get_date_string
-from src.lib.utility.db_pool import get_area_city
+from src.lib.utility.db_pool import get_area_city, get_crawl_task, insert_crawl_task, get_db_city, get_info
 from src.lib.utility.path import DATA_PATH
-from src.xiaoqu_to_csv import xiaoqu_to_csv
 from logging.config import dictConfig
 
 
 dictConfig({
     'version': 1,
     'formatters': {'default': {
-        'format':  "[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s][%(thread)d] - %(message)s",
+        'format':  "[%(asctime)s][%(filename)s:%(lineno)d][%(levelname)s]-%(message)s",
     }},
     'handlers': {'wsgi': {
         'class': 'logging.StreamHandler',
@@ -49,7 +45,7 @@ class Config(object):  # 创建配置，用类
             'seconds': 30,
         },
     ]
-    REDIS_URL = "redis://:Xu551212@127.0.0.1/0"
+    REDIS_URL = "redis://:Xu551212@119.8.116.167/0"
 
 
 app = Flask(__name__)
@@ -59,23 +55,30 @@ redis_client = FlaskRedis(app, decode_responses=True)
 
 @app.route('/')
 def index():
-    # TODO 进行前端参数传递
     crawl_status = {
         '1': '待抓取',
         '2': '抓取中',
         '3': '抓取完成',
         '4': '抓取失败',
+        'xiaoqu': '小区房价',
+        'ershou': '挂牌二手房',
+        'loupan': '新房',
     }
+    results = get_db_city()
+    crawl_tasks = list()
 
     crawl_task = redis_client.hgetall('crawl_task')
-    crawl_tasks = list()
     for task in crawl_task:
         crawl_tasks.append((
             str(task).split('_')[0],
             str(task).split('_')[1],
+            str(task).split('_')[2],
             str(crawl_task[task]),
         ))
     content = {
+        "cities": results['result_city'],
+        "result_fang": results['result_fang'],
+        "result_ershou": results['result_ershou'],
         "crawl_status": crawl_status,
         "crawl_tasks": crawl_tasks,
     }
@@ -85,43 +88,45 @@ def index():
 @app.route('/delete')
 def delete():
     request_param = request.values.to_dict()
-    redis_client.hdel('crawl_task', request_param['city'] + '_' + request_param['house_type'])
+    redis_client.hdel('crawl_task', '_'.join((
+            request_param['house_type'],
+            request_param['city'],
+            request_param['area'],
+         )))
     return redirect(url_for('index'))
 
 
 @app.route('/result')
 def result():
     request_param = request.values.to_dict()
-    csv_path = get_csv_dir((request_param['city'], request_param['house_type']))
-    app.logger.info(csv_path)
-    if os.path.exists(csv_path):
+    results = get_info(request_param['house_type'], request_param['city'], request_param['area'])
+    if results:
         try:
-            contents = list()
-            with open(csv_path) as csvfile:
-                csv_reader = csv.reader(csvfile)  # 使用csv.reader读取csvfile中的文件
-                birth_header = next(csv_reader)  # 读取第一行每一列的标题
-                for row in csv_reader:  # 将csv 文件中的数据保存到birth_data中
-                    contents.append(row)
-            cont = [i[0].split(';') for i in contents]
-            header = birth_header[0].split(';')
             content = {
-                "contents": cont[:50],
-                "header": header,
-                "request_param": request_param,
+                'results': results[:50],
+                'request_param': request_param
             }
         except Exception as e:
             app.logger.error(e)
-            content = dict()
+            content = {}
     else:
-        content = dict()
+        content = {}
     return render_template('result.html', **content)
 
 
 @app.route('/download')
 def download_file():
     request_param = request.values.to_dict()
-    csv_path = get_csv_dir((request_param['city'], request_param['house_type']))
-    file_name = get_date_string() + "{}_{}.csv".format(request_param['house_type'], request_param['city'])
+    results = get_info(request_param['house_type'], request_param['city'], request_param['area'])
+    if results:
+        date = get_date_string()
+        csv_path = DATA_PATH + "/{}_{}_{}_{}.csv".format(date, request_param['house_type'], request_param['city'], request_param['area'])
+        with open(csv_path, 'w') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerows(results)
+    else:
+        csv_path = None
+    file_name = get_date_string() + "_{}_{}_{}.csv".format(request_param['house_type'], request_param['city'], request_param['area'])
 
     return send_file(csv_path, mimetype='text/csv', attachment_filename=file_name, as_attachment=True)
 
@@ -129,11 +134,23 @@ def download_file():
 @app.route('/grab', methods=['POST'])
 def grab():
     request_param = request.values.to_dict()
-    if all(i in request_param for i in ('city', 'house_type')) and all((request_param['city'], request_param['house_type'])):
-        app.logger.info("获取到 city {}, house_type {}".format(request_param['city'], request_param['house_type']))
-        redis_client.hset('crawl_task', request_param['city']+'_'+request_param['house_type'], 1)
-        queues.put((request_param['city'], request_param['house_type']))
-        app.logger.info("已推到队列！！！")
+    if all(i in request_param for i in ('city', 'house_type', 'area', 'province')) and \
+            all((request_param['city'], request_param['house_type'])):
+        redis_client.hset('crawl_task', '_'.join((
+            request_param['house_type'],
+            request_param['city'],
+            request_param['area'],
+         )), 1)
+        queues.put((
+            request_param['house_type'],
+            request_param['city'],
+            request_param['area'],
+        ))
+        app.logger.info("已推到队列！！！ {}".format('_'.join((
+            request_param['house_type'],
+            request_param['city'],
+            request_param['area'],
+         ))))
     else:
         return json.dumps({'status': "0", "result": "parameter error!!!"})
     return json.dumps({'status': "1", "result": "Ready to grab!!!"})
@@ -155,37 +172,29 @@ def run_spider(queues):
         except Exception:
             app.logger.info('队列是空的')
             break
-        redis_client.hset('crawl_task', data[0] + '_' + data[1], 2)
-        csv_path = get_csv_dir(data)
-        if not os.path.exists(csv_path):
+        redis_client.hset('crawl_task', '_'.join(data), 2)
+        result = get_crawl_task(*data)
+        if not result:
             try:
-                if data[1] == 'xiaoqu':
-                    XiaoQuBaseSpider().start(data[0])
+                crawl_time = 0
+                if data[0] == 'xiaoqu':
+                    crawl_time = XiaoQuBaseSpider(data[1], data[2]).start()
+                elif data[0] == 'ershou':
+                    crawl_time = ErShouSpider(data[1], data[2]).start()
+                elif data[0] == 'loupan':
+                    crawl_time = LouPanBaseSpider(data[1], data[2]).start()
+
+                if crawl_time and insert_crawl_task(data[0], data[1], data[2], crawl_time):
+                    app.logger.info("抓取完成!!!")
+                    redis_client.hset('crawl_task', '_'.join(data), 3)
                 else:
-                    redis_client.hset('crawl_task', data[0] + '_' + data[1], 3)
-                    continue
-                # elif data[1] == 'ershou':
-                #     ErShouSpider().start(data[0])
-                # elif data[1] == 'zufang':
-                #     ZuFangBaseSpider().start(data[0])
-                # elif data[1] == 'loupan':
-                #     LouPanBaseSpider().start(data[0])
-                xiaoqu_to_csv(data)
-                redis_client.hset('crawl_task', data[0] + '_' + data[1], 3)
+                    redis_client.hset('crawl_task', '_'.join(data), 4)
             except Exception as e:
-                redis_client.hset('crawl_task', data[0] + '_' + data[1], 4)
+                redis_client.hset('crawl_task', '_'.join(data), 4)
                 app.logger.error(e)
         else:
-            redis_client.hset('crawl_task', data[0] + '_' + data[1], 3)
+            redis_client.hset('crawl_task', '_'.join(data), 3)
             app.logger.info("已经抓过。")
-
-
-def get_csv_dir(data):
-    date = get_date_string()
-    csv_dir = "{0}/{1}/{2}/{3}/{4}".format(DATA_PATH, SPIDER_NAME, data[1], data[0], date)
-    csv_path = csv_dir + "{}_{}.csv".format(data[1], data[0])
-
-    return csv_path
 
 
 if __name__ == '__main__':

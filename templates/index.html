@@ -8,11 +8,11 @@
 <body>
 
 <div id="form-div">
-<form id="my-form" method="post" action="##" onsubmit="return false"></form>
-    <select id="cmbType" name="cmbType"></select>
-    <select id="cmbProvince" name="cmbProvince"></select>
-    <select id="cmbCity" name="cmbCity"></select>
-    <select id="cmbArea" name="cmbArea"></select>
+<form id="my-form" method="post" action="##" onsubmit="return false">
+    <select id="cmbType" name="house_type"></select>
+    <select id="cmbProvince" name="province"></select>
+    <select id="cmbCity" name="city"></select>
+    <select id="cmbArea" name="area"></select>
 
     <script type="text/javascript">
         addressInit('cmbType', 'cmbProvince', 'cmbCity', 'cmbArea');
@@ -21,38 +21,19 @@
 </form>
 </div>
 
-
-<!-- <div id="form-div">
-<form id="my-form" method="post" action="##" onsubmit="return false">
-
-    <select name="city" multiple="multiple" size="4">
-        {% if cities %}
-            {% for i in cities %}
-                <option value="{{ i }}">{{ cities[i] }}</option>
-            {% endfor %}
-        {% endif %}
-    </select>
-
-    <select name="house_type" multiple="multiple" size="4">
-        {% if house_type %}
-            {% for i in house_type %}
-                <option value="{{ i }}">{{ house_type[i] }}</option>
-            {% endfor %}
-        {% endif %}
-    </select>
-
-    <input type="submit" value="抓取" onclick="login()">&nbsp<input type="reset" value="重置">
-</form>
-</div> -->
-
 <div>
 <ul>
     {% for i in crawl_tasks %}
     <li>
         <button type="submit" onclick="btnAction(this)">查看</button>
-        <span class="{{ i[0] }}">{{ cities[i[0]] }}</span>
-        <span class="{{ i[1] }}">{{ house_type[i[1]] }}</span>
-        <span class="{{ i[2] }}">{{ crawl_status[i[2]] }}</span>
+        <span class="{{ i[0] }}">{{ crawl_status[i[0]] }}</span>
+        <span class="{{ i[1] }}">{{ cities[i[1]] }}</span>
+        {% if 'loupan' in i[0] %}
+            <span class="{{ i[2] }}">{{ result_fang[i[2]] }}</span>
+        {% else %}
+            <span class="{{ i[2] }}">{{ result_ershou[i[2]] }}</span>
+        {% endif %}
+        <span class="{{ i[3] }}">{{ crawl_status[i[3]] }}</span>
         <button type="submit" onclick="DeleteBtn(this)">删除</button>
     </li>
     {% endfor %}

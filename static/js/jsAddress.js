@@ -74,10 +74,6 @@ var addressInit = function (_cmbType, _cmbProvince, _cmbCity, _cmbArea, defaultT
         cmbProvince.onchange = null;
         if (cmbType.selectedIndex == -1) return;
         var item = cmbType.options[cmbType.selectedIndex].obj;
-        console.log(item);
-        // for (var i = 0; i < item.city.length; i++) {
-        //     cmbAddOption(cmbProvince, item.city[i].city_name, item.city[i], item.city[i].city_code);
-        // }
         for (var i = 0; i < item.length; i++) {
             cmbAddOption(cmbProvince, item[i].name, item[i], null);
         }
@@ -109,10 +105,11 @@ var addressInit = function (_cmbType, _cmbProvince, _cmbCity, _cmbArea, defaultT
 };
 
 function btnAction(data) {
-    var state = data.parentNode.getElementsByTagName("span")[2];
-    var city = data.parentNode.getElementsByTagName("span")[0].className;
-    var house_type = data.parentNode.getElementsByTagName("span")[1].className;
-    const finalUrl = `/result?city=${city}&house_type=${house_type}`;
+    var house_type = data.parentNode.getElementsByTagName("span")[0].className;
+    var city = data.parentNode.getElementsByTagName("span")[1].className;
+    var area = data.parentNode.getElementsByTagName("span")[2].className;
+    var state = data.parentNode.getElementsByTagName("span")[3];
+    const finalUrl = `/result?house_type=${house_type}&city=${city}&area=${area}`;
     if (state.className == "3"){
         window.location.href = finalUrl;
     }
@@ -122,10 +119,11 @@ function btnAction(data) {
 };
 
 function DeleteBtn(data) {
-    var state = data.parentNode.getElementsByTagName("span")[2];
-    var city = data.parentNode.getElementsByTagName("span")[0].className;
-    var house_type = data.parentNode.getElementsByTagName("span")[1].className;
-    const finalUrl = `/delete?city=${city}&house_type=${house_type}`;
+    var house_type = data.parentNode.getElementsByTagName("span")[0].className;
+    var city = data.parentNode.getElementsByTagName("span")[1].className;
+    var area = data.parentNode.getElementsByTagName("span")[2].className;
+    var state = data.parentNode.getElementsByTagName("span")[3];
+    const finalUrl = `/delete?house_type=${house_type}&city=${city}&area=${area}`;
     if (state.className == "3"){
         window.location.href = finalUrl;
     }

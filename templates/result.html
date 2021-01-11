@@ -9,25 +9,19 @@
 
 <div>
 <table border="1">
-        {% if header and contents %}
-
-            <tr>
-            {% for i in header %}
-                <th>{{ i }}</th>
+    {% if results %}
+        {% for i in results %}
+        <tr>
+            {% for j in i %}
+            <td>{{ j }}</td>
             {% endfor %}
-            </tr>
-            {% for i in contents %}
-            <tr>
-                {% for j in i %}
-                <td>{{ j }}</td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        {% endif %}
+        </tr>
+        {% endfor %}
+    {% endif %}
 </table>
 <div>
 	{% if request_param %}
-	<a href="/download?house_type={{ request_param['house_type'] }}&city={{ request_param['city'] }}" style="cursor: pointer;font-size: 40px;">下载全部</a>
+	<a href="/download?house_type={{ request_param['house_type'] }}&city={{ request_param['city'] }}&area={{ request_param['area'] }}" style="cursor: pointer;font-size: 40px;">下载全部</a>
 	{% endif %}
 </div>
 </div>

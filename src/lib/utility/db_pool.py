@@ -23,8 +23,8 @@ POOL = PooledDB(
     # 7 = always
     host='127.0.0.1',
     port=3306,
-    user='root',
-    password='xu551212',
+    user='liu',
+    password='9090',
     database='test',
     charset='utf8'
 )
@@ -82,5 +82,141 @@ def get_area_city():
     return result
 
 
+def get_crawl_task(house_type, city, area):
+    """
+    获取数据库中抓取任务
+    :return:
+    """
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql = """
+        select * from crawl_task where house_type=%s and city=%s and area=%s and crawl_time is not null 
+        and to_days(createtime)=to_days(now())
+    """
+    try:
+        cur.execute(sql, (house_type, city, area))
+        result = cur.fetchall()
+    except Exception as e:
+        logger.error(repr(e))
+        result = None
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
+def insert_crawl_task(house_type, city, area, crawl_time):
+    """
+    获取数据库中抓取任务
+    :return:
+    """
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql = """insert into crawl_task(house_type, city, area, crawl_time) VALUES (%s, %s, %s, %s)"""
+    try:
+        cur.execute(sql, (house_type, city, area, crawl_time))
+        coon.commit()
+        result = True
+    except Exception as e:
+        logger.error(repr(e))
+        coon.rollback()
+        result = False
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
+def get_db_city():
+    """
+    获取数据库中城市中文名
+    :return:
+    """
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql_fang = """select a.area_code, a.area from area_city_ke a """
+
+    sql_ershou = """select a.area_code, a.area from ershou_area_ke a """
+
+    sql_city = """select a.city_code, a.city from provice_city_ke a """
+
+    try:
+        cur.execute(sql_fang)
+        result_fang = cur.fetchall()
+        cur.execute(sql_ershou)
+        result_ershou = cur.fetchall()
+        cur.execute(sql_city)
+        result_city = cur.fetchall()
+
+        result = {
+            'result_fang': dict(result_fang),
+            'result_ershou': dict(result_ershou),
+            'result_city': dict(result_city)
+        }
+
+    except Exception as e:
+        logger.error(repr(e))
+        result = dict()
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
+def get_info(house_type, city, area):
+    """
+    获取数据库中抓取任务
+    :return:
+    """
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql_xiaoqu = """
+    select a.id, b.city, ack.area, xiao.xiaoqu_name, xiao.houseinfo, xiao.positioninfo, xiao.taglist, xiao.price, xiao.on_sale
+        from houses_city_ke a
+        left join provice_city_ke b on a.city_code=b.city_code
+        left join ershou_area_ke ack on a.area_code = ack.area_code
+        join xiaoqu_info_ke xiao on xiao.houses_id = a.id
+        where a.city_code=%s and a.area_code=%s
+    """
+    sql_ershou = """
+    select a.id, b.city, ack.area, ershou.ershou_name, ershou.positioninfo, ershou.houseinfo, ershou.followinfo, ershou.tag, ershou.priceinfo
+        from houses_city_ke a
+        left join provice_city_ke b on a.city_code=b.city_code
+        left join ershou_area_ke ack on a.area_code = ack.area_code
+        join ershou_info_ke ershou on ershou.houses_id = a.id
+        where a.city_code=%s and a.area_code=%s
+    """
+    sql_loupan = """
+    select a.id, b.city, ack.area, houses.houses_title, houses.houses_type, houses.houses_status, houses.houses_location,
+            houses.houses_room, houses.houses_tag, houses.houses_price
+        from houses_city_ke a
+        left join provice_city_ke b on a.city_code=b.city_code
+        left join area_city_ke ack on a.area_code = ack.area_code
+        join houses_info_ke houses on houses.houses_id = a.id
+        where a.city_code=%s and a.area_code=%s
+    """
+    sql_dict = {
+        'loupan': sql_loupan,
+        'ershou': sql_ershou,
+        'xiaoqu': sql_xiaoqu,
+    }
+
+    try:
+        cur.execute(sql_dict[house_type], (city, area))
+        result = cur.fetchall()
+        # TODO 如果查楼盘的info 有几个字段是数字还要继续优化
+    except Exception as e:
+        logger.error(repr(e))
+        result = None
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
 if __name__ == '__main__':
-    print(get_area_city())
+    get_info('loupan', 'tr', 'bijiangqu')

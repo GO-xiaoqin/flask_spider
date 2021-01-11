@@ -123,8 +123,8 @@ class LouPanBaseSpider(BaseSpider):
             # 插入到 db
             self.data_db([
                 (None, loupan)[bool(loupan)],
-                (None, resblock_type[0])[bool(resblock_type)],
-                (None, resblock_status[0])[bool(resblock_status)],
+                resblock_type[0] if resblock_type else None,
+                resblock_status[0] if resblock_status else None,
                 (None, resblock_location)[bool(resblock_location)],
                 (None, resblock_room)[bool(resblock_room)],
                 (None, resblock_tag)[bool(resblock_tag)],
@@ -143,7 +143,7 @@ class LouPanBaseSpider(BaseSpider):
         # 获取 mysql 连接
         coon = POOL.connection()
         cur = coon.cursor()
-        sql = """select * from houses_city where houses=%s and area_code=%s and city_code=%s"""
+        sql = """select * from houses_city_ke where houses=%s and area_code=%s and city_code=%s"""
         cur.execute(sql, [('', data[0])[bool(data[0])], ('', self.area)[bool(self.area)], self.city])
         result = cur.fetchone()
         if result:
@@ -151,7 +151,7 @@ class LouPanBaseSpider(BaseSpider):
         else:
             try:
                 cur.execute(
-                    """insert into houses_city(houses, area_code, city_code) VALUES (%s, %s, %s)""",
+                    """insert into houses_city_ke(houses, area_code, city_code) VALUES (%s, %s, %s)""",
                     [('', data[0])[bool(data[0])], ('', self.area)[bool(self.area)], self.city]
                 )
                 coon.commit()
@@ -172,7 +172,7 @@ class LouPanBaseSpider(BaseSpider):
             data.append(int(houses_id))
             cur.execute(
                 """
-                insert into houses_info(
+                insert into houses_info_ke(
                 houses_title, houses_type, houses_status, houses_location, houses_room,
                 houses_tag, houses_price, houses_id
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -210,5 +210,5 @@ class LouPanBaseSpider(BaseSpider):
 
 
 if __name__ == '__main__':
-    spider = LouPanBaseSpider('bj')
+    spider = LouPanBaseSpider('tr', 'bijiangqu')
     spider.start()
