@@ -1,14 +1,14 @@
 # coding=utf-8
 
 import requests
-
 import threadpool
-from lxml import etree
 import pymysql
-
+from lxml import etree
+from conf import *
 from src.lib.spider.base_spider import thread_pool_size
 
-db = pymysql.connect("localhost", "root", "xu551212", "test")
+
+db = pymysql.connect(MYSQL_HOST, MYSQL_USER, MYSQL_PWD, MYSQL_DB)
 
 url = "http://{}.ke.com/xiaoqu/"
 headers = {
@@ -19,7 +19,7 @@ headers = {
 
 
 def main(city, city_id):
-    db2 = pymysql.connect("localhost", "root", "xu551212", "test")
+    db2 = pymysql.connect(MYSQL_HOST, MYSQL_USER, MYSQL_PWD, MYSQL_DB)
     try:
         response = requests.get(url.format(city), headers=headers, timeout=10)
     except Exception as e:

@@ -1,11 +1,11 @@
 # coding=utf-8
 import re
-
 import requests
-import pprint
+import pymysql
+
 from urllib import parse
 from lxml import etree
-import pymysql
+from conf import *
 
 
 def main():
@@ -32,8 +32,7 @@ def main():
 
             city_dict[str(i.xpath('.//*[contains(@class,"city_list_tit")]//text()')[0]).strip()] = list(city_code)
 
-        # pprint.pprint(city_dict)
-        db = pymysql.connect("localhost", "root", "xu551212", "test")
+        db = pymysql.connect(MYSQL_HOST, MYSQL_USER, MYSQL_PWD, MYSQL_DB)
         cursor = db.cursor()
         sql = "INSERT INTO provice_city_ke (city, city_code, city_href, city_status, provice) VALUES (%s,%s,%s,%s,%s)"
 

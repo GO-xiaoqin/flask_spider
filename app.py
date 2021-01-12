@@ -12,6 +12,7 @@ from src.lib.spider.loupan_spider_db import LouPanBaseSpider
 from src.lib.utility.date import get_date_string
 from src.lib.utility.db_pool import get_area_city, get_crawl_task, insert_crawl_task, get_db_city, get_info
 from src.lib.utility.path import DATA_PATH
+from conf import *
 from logging.config import dictConfig
 
 
@@ -45,7 +46,7 @@ class Config(object):  # 创建配置，用类
             'seconds': 30,
         },
     ]
-    REDIS_URL = "redis://:Xu551212@119.8.116.167/0"
+    REDIS_URL = REDIS_URL
 
 
 app = Flask(__name__)
@@ -201,4 +202,4 @@ if __name__ == '__main__':
     scheduler = APScheduler()
     scheduler.init_app(app)
     scheduler.start()
-    app.run(host='0.0.0.0', port=8883, debug=True)
+    app.run(host=HOST, port=PORT, debug=DEBUG)

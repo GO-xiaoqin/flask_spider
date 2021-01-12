@@ -4,6 +4,7 @@
 import pymysql
 from dbutils.pooled_db import PooledDB
 from src.lib.utility.log import logger
+from conf import *
 
 POOL = PooledDB(
     creator=pymysql,  # 使用链接数据库的模块
@@ -21,11 +22,11 @@ POOL = PooledDB(
     # 2 = when a cursor is created,
     # 4 = when a query is executed,
     # 7 = always
-    host='127.0.0.1',
-    port=3306,
-    user='liu',
-    password='9090',
-    database='test',
+    host=MYSQL_HOST,
+    port=MYSQL_PORT,
+    user=MYSQL_USER,
+    password=MYSQL_PWD,
+    database=MYSQL_DB,
     charset='utf8'
 )
 
@@ -208,13 +209,29 @@ def get_info(house_type, city, area):
     try:
         cur.execute(sql_dict[house_type], (city, area))
         result = cur.fetchall()
-        # TODO 如果查楼盘的info 有几个字段是数字还要继续优化
     except Exception as e:
         logger.error(repr(e))
         result = None
     finally:
         cur.close()
         coon.close()
+
+    # 对楼盘的数据进行清理
+    if house_type == 'loupan':
+        """
+        楼盘类型: 1住宅，2别墅，3商业，4写字楼，5底商
+        楼盘状态: 1在售，2下期待开，3未开盘
+        """
+        loupan_type = {'1': '住宅', '2': '别墅', '3': '商业', '4': '写字楼', '5': '底商'}
+        loupan_status = {'1': '在售', '2': '下期待开', '3': '未开盘'}
+        result = [list(i) for i in result]
+        for i in range(len(result)):
+            for j in range(len(result[i])):
+                if j == 4 and str(result[i][j]) in loupan_type:
+                    result[i][j] = loupan_type[str(result[i][j])]
+                elif j == 5 and str(result[i][j]) in loupan_type:
+                    result[i][j] = loupan_status[str(result[i][j])]
+
     return result
 
 
