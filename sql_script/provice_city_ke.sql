@@ -7,4 +7,4 @@ CREATE TABLE `provice_city_ke` (
   `provice` VARCHAR(50) DEFAULT NULL,
   unique index(`city` ,`city_code`),
   PRIMARY KEY (`id`)
-) ENGINE=INNODB DEFAULT CHARSET=utf8;
+) ENGINE=INNODB DEFAULT CHARSET=utf8 comment='存储贝壳网的城市';

@@ -8,4 +8,4 @@ CREATE TABLE area_city_ke(
     FOREIGN KEY(`city_id`) REFERENCES provice_city_ke(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=INNODB DEFAULT CHARSET=utf8;
+) ENGINE=INNODB DEFAULT CHARSET=utf8 comment='存储贝壳网新房楼盘城市对应的区域';
