@@ -46,7 +46,7 @@ select * from test.area_city_ke a where a.area='静安'
 select * from test.xiaoqu_detail_ke
 select * from test.ershou_info_ke limit 10
 select count(*)  from test.ershou_info_ke;
-delete from test.ershou_info_ke]]></console>
+select * from test.xiaoqu_detail_ke]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
