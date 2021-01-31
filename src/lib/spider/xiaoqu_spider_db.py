@@ -2,20 +2,17 @@
 # coding=utf-8
 # 此代码仅供学习与交流，请勿用于商业用途。
 # 爬取小区数据的爬虫派生类
-import os
-import sys
+import requests
 
+from src.lib.request.headers import create_headers
+from src.lib.spider.get_xiaoqu_info_spider import get_info_spider
 from src.lib.utility.db_pool import POOL
-
-sys.path.append(os.getcwd()) 
-
 import re
 import threadpool
 from bs4 import BeautifulSoup
 from src.lib.spider.base_spider import *
 from src.lib.utility.date import *
 from src.lib.utility.log import *
-from src.lib.zone.area import *
 
 
 class XiaoQuBaseSpider(BaseSpider):
@@ -81,13 +78,14 @@ class XiaoQuBaseSpider(BaseSpider):
             logger.error("Have a Error {}".format(repr(e)))
             return
 
-        html = response.content
+        html = response.text
         soup = BeautifulSoup(html, "lxml")
 
         # 获得有小区信息的panel
         house_elems = soup.find_all('li', class_="xiaoquListItem")
         for house_elem in house_elems:
             try:
+                xiaoqu_detail_url = house_elem.find('div', class_='title').find('a')['href']
                 name = house_elem.find('div', class_='title').find('a')['title']
                 houseinfo = house_elem.find('div', class_='houseInfo').text
                 positioninfo = house_elem.find('div', class_='positionInfo').text
@@ -105,16 +103,18 @@ class XiaoQuBaseSpider(BaseSpider):
             price = str(price).strip().replace("\n", ",")
             on_sale = str(on_sale).strip().replace("\n", ",")
 
-            # logger.info([name, houseinfo, positioninfo, taglist, price, on_sale])
-            # 插入到 db
-            self.data_db([
-                (None, name)[bool(name)],
-                (None, houseinfo)[bool(houseinfo)],
-                (None, positioninfo)[bool(positioninfo)],
-                (None, taglist)[bool(taglist)],
-                (None, price)[bool(price)],
-                (None, on_sale)[bool(on_sale)],
-            ])
+            xiaoqu_id = get_info_spider(xiaoqu_detail_url, self.area, self.city, 'xiaoqu')
+            if xiaoqu_id:
+                # 插入到 db
+                self.data_db([
+                    (None, name)[bool(name)],
+                    (None, houseinfo)[bool(houseinfo)],
+                    (None, positioninfo)[bool(positioninfo)],
+                    (None, taglist)[bool(taglist)],
+                    (None, price)[bool(price)],
+                    (None, on_sale)[bool(on_sale)],
+                    xiaoqu_id
+                ])
 
     def data_db(self, data):
         """
@@ -157,8 +157,8 @@ class XiaoQuBaseSpider(BaseSpider):
             data.append(int(houses_id))
             cur.execute(
                 """
-                insert into xiaoqu_info_ke (xiaoqu_name, houseinfo, positioninfo, taglist, price, on_sale, houses_id
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                insert into xiaoqu_info_ke (xiaoqu_name, houseinfo, positioninfo, taglist, price, on_sale, xiaoqu_id, houses_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 data
             )
@@ -192,5 +192,5 @@ class XiaoQuBaseSpider(BaseSpider):
 
 
 if __name__ == "__main__":
-    spider = XiaoQuBaseSpider("fs")
+    spider = XiaoQuBaseSpider("sh", 'songjiang')
     spider.start()

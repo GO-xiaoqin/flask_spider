@@ -8,15 +8,12 @@ import math
 import requests
 import threadpool
 from bs4 import BeautifulSoup
-from src.lib.item.loupan import *
 from src.lib.spider.base_spider import *
 from src.lib.request.headers import *
 from src.lib.utility.date import *
 from src.lib.utility.db_pool import POOL
 from src.lib.utility.path import *
-from src.lib.zone.city import get_city
 from src.lib.utility.log import *
-import src.lib.utility.version
 
 
 class LouPanBaseSpider(BaseSpider):

@@ -235,5 +235,45 @@ def get_info(house_type, city, area):
     return result
 
 
+def get_ch_city(city):
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql = """select city from provice_city_ke where city_code=%s"""
+    try:
+        cur.execute(sql, city)
+        result = cur.fetchone()
+    except Exception as e:
+        logger.error(repr(e))
+        result = None
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
+def get_ch_area(area, houses_type):
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql_fang = """select a.area from area_city_ke a where a.area_code=%s"""
+    sql_ershou = """select a.area from ershou_area_ke a where a.area_code=%s"""
+    sql_dict = {
+        'loupan': sql_fang,
+        'ershou': sql_ershou,
+        'xiaoqu': sql_ershou,
+    }
+    try:
+        cur.execute(sql_dict[houses_type], area)
+        result = cur.fetchone()
+    except Exception as e:
+        logger.error(repr(e))
+        result = None
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
 if __name__ == '__main__':
-    get_info('loupan', 'tr', 'bijiangqu')
+    print(get_ch_area('songjiang', 'ershou'))

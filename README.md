@@ -1,4 +1,4 @@
-# 抓取贝壳网的Python程序
+# Python爬虫程序
 一个关于Flask、Python的页面封装程序，这个抓取程序的轮子不是我本人所写，抓取程序基础轮子是我在Github找的大佬的的程序改的原抓取程序的地址<https://github.com/jumper2014/lianjia-beike-spider>。  
 
 环境配置：  

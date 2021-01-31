@@ -8,9 +8,11 @@ CREATE TABLE ershou_info_ke(
     `priceinfo` VARCHAR(50) DEFAULT NULL comment '参考价格',
     `createtime` datetime DEFAULT CURRENT_TIMESTAMP,
     `updatetime` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `xiaoqu_id` INT(11) UNSIGNED NOT NULL,
     `houses_id` INT(11) UNSIGNED NOT NULL,
     PRIMARY KEY (`id`),
     unique index(`houses_id`, `tag`, `priceinfo`),
+    FOREIGN KEY(`xiaoqu_id`) REFERENCES xiaoqu_detail_ke(id),
     FOREIGN KEY(`houses_id`) REFERENCES houses_city_ke(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE

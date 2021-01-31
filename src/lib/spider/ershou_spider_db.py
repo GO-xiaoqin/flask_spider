@@ -4,17 +4,17 @@
 # 爬取二手房数据的爬虫派生类
 
 import re
+import requests
 import threadpool
 from bs4 import BeautifulSoup
-from src.lib.item.ershou import *
+
+from src.lib.request.headers import create_headers
+from src.lib.spider.get_xiaoqu_info_spider import get_info_spider
 from src.lib.utility.db_pool import POOL
-from src.lib.zone.city import get_city
 from src.lib.spider.base_spider import *
 from src.lib.utility.date import *
 from src.lib.utility.path import *
-from src.lib.zone.area import *
 from src.lib.utility.log import *
-import src.lib.utility.version
 
 
 class ErShouSpider(BaseSpider):
@@ -30,6 +30,7 @@ class ErShouSpider(BaseSpider):
         get_url = "http://{0}.{1}.com/ershoufang/{2}/".format(self.city, self.name, self.area) if self.area else get_url
         # 获取页面页数
         total_page = self.get_ershou_page(get_url)
+        # logger.info(total_page)
         args = ["{}pg{}/".format(get_url, i) for i in range(1, int(total_page) + 1)]
 
         # 针对每个板块写一个文件,启动一个线程来操作
@@ -88,6 +89,7 @@ class ErShouSpider(BaseSpider):
         house_elements = soup.find_all('li', class_="clear")
         for house_elem in house_elements:
             try:
+                xiaoqu_detail_url = house_elem.find('div', class_="positionInfo").find('a')['href']
                 name = house_elem.find('div', class_='title').find('a')['title']
                 positioninfo = house_elem.find('div', class_="positionInfo").text
                 houseinfo = house_elem.find('div', class_="houseInfo").text
@@ -104,16 +106,19 @@ class ErShouSpider(BaseSpider):
             followinfo = str(followinfo).strip().replace("\n", ",").replace(" ", "")
             tag = str(tag).strip().replace("\n", ",")
             priceinfo = str(priceinfo).strip().replace("\n\n", ",").replace("\n", ",")
-            # logger.info((name, positioninfo, houseinfo, followinfo, tag, priceinfo))
-            # 插入到 db
-            self.data_db([
-                (None, name)[bool(name)],
-                (None, positioninfo)[bool(positioninfo)],
-                (None, houseinfo)[bool(houseinfo)],
-                (None, followinfo)[bool(followinfo)],
-                (None, tag)[bool(tag)],
-                (None, priceinfo)[bool(priceinfo)],
-            ])
+
+            xiaoqu_id = get_info_spider(xiaoqu_detail_url, self.area, self.city, 'ershou')
+            if xiaoqu_id:
+                # 插入到 db
+                self.data_db([
+                    (None, name)[bool(name)],
+                    (None, positioninfo)[bool(positioninfo)],
+                    (None, houseinfo)[bool(houseinfo)],
+                    (None, followinfo)[bool(followinfo)],
+                    (None, tag)[bool(tag)],
+                    (None, priceinfo)[bool(priceinfo)],
+                    xiaoqu_id
+                ])
 
     def data_db(self, data):
         """
@@ -160,18 +165,18 @@ class ErShouSpider(BaseSpider):
             data.append(int(houses_id))
             cur.execute(
                 """
-                insert into ershou_info_ke (ershou_name, positioninfo, houseinfo, followinfo, tag, priceinfo, houses_id
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                insert into ershou_info_ke (ershou_name, positioninfo, houseinfo, followinfo, tag, priceinfo, xiaoqu_id, houses_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 data
             )
             coon.commit()
         except Exception as e:
             logger.error(repr(e))
-            logger.error("存储 xiaoqu_info 失败!!!")
+            logger.error("存储 ershou_info 失败!!!")
             coon.rollback()
         else:
-            logger.info("存储 xiaoqu {} 成功 by in houses_id {}".format(data[0], houses_id))
+            logger.info("存储 ershou {} 成功 by in houses_id {}".format(data[0], houses_id))
         finally:
             cur.close()
             coon.close()
@@ -195,5 +200,5 @@ class ErShouSpider(BaseSpider):
 
 
 if __name__ == '__main__':
-    spider = ErShouSpider("gz")
+    spider = ErShouSpider("sh", 'songjiang')
     spider.start()
