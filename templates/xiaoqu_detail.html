@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小区详情</title>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jsAddress.js') }}"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=7rkahegflXRnaxE8eaMY6tVra4bcFbhR"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery-1.11.2.min.js') }}"></script>
+    <script type="text/javascript">window.onload=function(){xiaoqu_map(window.document);}</script>
+</head>
+<body>
+<table border="1">
+    <tr>
+        <th>编号</th>
+        <th>小区名字</th>
+        <th>建筑类型</th>
+        <th>物业费用</th>
+        <th>物业公司</th>
+        <th>开发商</th>
+        <th>楼栋总数</th>
+        <th>房屋总数</th>
+        <th>附近门店</th>
+        <th>纬度</th>
+        <th>经度</th>
+    </tr>
+    {% if results %}
+    <tr>
+        {% for i in results %}
+        <td>{{ i }}</td>
+        {% endfor %}
+    </tr>
+    {% endif %}
+</table>
+
+<div id="map">
+    <div style="width: 80%; height: 800px;" id="mymap"></div>
+</div>
+
+</body>
+</html>

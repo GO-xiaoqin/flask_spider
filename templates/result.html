@@ -3,12 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>详情</title>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jsAddress.js') }}"></script>
+    <script type="text/javascript">window.onload=function(){xiaoqu(window.document);}</script>
 </head>
 <body>
 <div><a onclick="window.location.href = '/'" style="cursor: pointer;font-size: 40px;">&nbsp&nbsp首页</a></div>
 
 <div>
 <table border="1">
+    <tr>
+        <th>编号</th>
+        <th>城市</th>
+        <th>地区</th>
+        <th>描述</th>
+        <th>小区名字</th>
+        <th>具体信息</th>
+        <th>关注信息</th>
+        <th>标签</th>
+        <th>价格</th>
+    </tr>
     {% if results %}
         {% for i in results %}
         <tr>

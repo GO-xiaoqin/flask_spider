@@ -153,3 +153,63 @@ function login() {
         }
     })
 };
+
+function xiaoqu_detail(xiaoqu_data){
+    let get_url = `/get_xiaoqu_detail?xiaoqu_name=${xiaoqu_data}`;
+    window.location.href = get_url;
+};
+
+function xiaoqu(windows) {
+    var tables = windows.getElementsByTagName('table');
+    if (tables) {
+        let table_tr = tables[0];
+        for (let index = 1; index < table_tr.rows.length; index++) {
+            for (let i = 0; i < table_tr.rows[index].children.length; i++) {
+                if (i === 4) {
+                    table_tr.rows[index].children[i].onclick = function(){xiaoqu_detail(table_tr.rows[index].children[i].textContent);};
+                    table_tr.rows[index].children[i].style.cursor="pointer";
+                }
+            }
+        }
+    }
+};
+
+//传入坐标，然后跳转到该位置
+function showMap(x, y) { 
+    var map = new BMap.Map("mymap");
+    map.centerAndZoom(new BMap.Point(x, y), 15); //坐标，放大倍数
+    //显示左上角的辅助栏
+    map.addControl(new BMap.NavigationControl());
+    //创建小红点
+    var marker = new BMap.Marker(new BMap.Point(x, y));
+    map.addOverlay(marker);
+    map.enableScrollWheelZoom(true); // 开启鼠标滚轮缩放
+    //穿件创建小红点上的提示框
+    // var infoWindow = new BMap.InfoWindow("<p>名字:风玡</p><p>phone:12345678911</p>");
+    // marker.addEventListener("click", function(){
+    //     this.openInfoWindow(infoWindow);
+    // })
+};
+
+function xiaoqu_map(xiaoqu) {
+    var lat, lng;
+    var tables = xiaoqu.getElementsByTagName('table');
+    if (tables) {
+        let table_tr = tables[0].children[0].children;
+        for (let index = 0; index < table_tr[1].children.length; index++) {
+            if (index === 9) {
+                lat = table_tr[1].children[index].textContent;
+                table_tr[0].children[index].style.display = 'none';
+                table_tr[1].children[index].style.display = 'none';
+            }
+            if (index === 10) {
+                lng = table_tr[1].children[index].textContent;
+                table_tr[0].children[index].style.display = 'none';
+                table_tr[1].children[index].style.display = 'none';
+            }
+        }
+        $(function(){
+            showMap(lng,lat); //初始坐标
+        })
+    }
+};

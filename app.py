@@ -10,7 +10,8 @@ from src.lib.spider.xiaoqu_spider_db import XiaoQuBaseSpider
 from src.lib.spider.ershou_spider_db import ErShouSpider
 from src.lib.spider.loupan_spider_db import LouPanBaseSpider
 from src.lib.utility.date import get_date_string
-from src.lib.utility.db_pool import get_area_city, get_crawl_task, insert_crawl_task, get_db_city, get_info
+from src.lib.utility.db_pool import get_area_city, get_crawl_task, insert_crawl_task, get_db_city, get_info, \
+    get_xiaou_detail
 from src.lib.utility.path import DATA_PATH
 from conf import *
 from logging.config import dictConfig
@@ -122,7 +123,7 @@ def download_file():
     if results:
         date = get_date_string()
         csv_path = DATA_PATH + "/{}_{}_{}_{}.csv".format(date, request_param['house_type'], request_param['city'], request_param['area'])
-        with open(csv_path, 'w') as csvfile:
+        with open(csv_path, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerows(results)
     else:
@@ -163,6 +164,24 @@ def get_city():
     if result:
         return json.dumps({'status': 1, "result": result})
     return json.dumps({'status': 0, "result": None})
+
+
+@app.route('/get_xiaoqu_detail', methods=['GET'])
+def get_xiaoqu_detail():
+    request_param = request.values.to_dict()
+    results = get_xiaou_detail(request_param['xiaoqu_name'])
+    if results:
+        try:
+            content = {
+                'results': results
+            }
+        except Exception as e:
+            app.logger.error(e)
+            content = {}
+    else:
+        content = {}
+
+    return render_template('xiaoqu_detail.html', **content)
 
 
 def run_spider(queues):

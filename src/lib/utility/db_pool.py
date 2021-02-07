@@ -224,7 +224,7 @@ def get_info(house_type, city, area):
         """
         loupan_type = {'1': '住宅', '2': '别墅', '3': '商业', '4': '写字楼', '5': '底商'}
         loupan_status = {'1': '在售', '2': '下期待开', '3': '未开盘'}
-        result = [list(i) for i in result]
+        result = [list(i) for i in result if i]
         for i in range(len(result)):
             for j in range(len(result[i])):
                 if j == 4 and str(result[i][j]) in loupan_type:
@@ -265,6 +265,23 @@ def get_ch_area(area, houses_type):
     }
     try:
         cur.execute(sql_dict[houses_type], area)
+        result = cur.fetchone()
+    except Exception as e:
+        logger.error(repr(e))
+        result = None
+    finally:
+        cur.close()
+        coon.close()
+    return result
+
+
+def get_xiaou_detail(xiaoqu_name):
+    # 获取 mysql 连接
+    coon = POOL.connection()
+    cur = coon.cursor()
+    sql = """select * from xiaoqu_detail_ke where xiaoqu_title=%s"""
+    try:
+        cur.execute(sql, xiaoqu_name)
         result = cur.fetchone()
     except Exception as e:
         logger.error(repr(e))
